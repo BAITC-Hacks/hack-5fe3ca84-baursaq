@@ -1,3 +1,5 @@
+import type { RecommendationResponse as ApiRecommendationResponse } from './types'
+
 export type Role = 'employee' | 'hr'
 export type Language = 'kk' | 'ru' | 'en'
 
@@ -70,11 +72,8 @@ export interface Recommendation {
   upcoming_sessions?: string[]
 }
 
-export interface RecommendationResponse {
+export interface RecommendationResponse extends Pick<ApiRecommendationResponse, 'source' | 'model' | 'latency_ms' | 'summary' | 'trace' | 'rejected'> {
   recommendations?: Recommendation[]
-  rejected?: Array<{ event_id?: string | null; title?: string; reason?: string; rationale?: string }> | string
-  why_not?: string
-  trace?: Array<string | { step?: string; tool?: string; message?: string; detail?: string }>
 }
 
 export interface CompleteResponse {

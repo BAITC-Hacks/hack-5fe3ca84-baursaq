@@ -1,0 +1,29 @@
+.source-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.source-badge svg { flex: none; }
+.source-ai { background: #e5f5eb; color: #006c4f; }
+.source-fallback { background: #fff2d6; color: #855800; }
+.recommendation-summary { font-size: 13px; line-height: 1.6; margin: 14px 0; color: #3e5d49; }
+.real-trace { list-style: none; margin: 12px 0 0; padding: 0; }
+.real-trace li { padding: 12px 0; border-top: 1px solid #dfe9e2; }
+.real-trace li.tool-call { color: #006c4f; }
+.trace-entry-heading { display: flex; align-items: center; gap: 6px; }
+.trace-entry-heading svg { flex: none; }
+.trace-entry-heading strong { min-width: 0; overflow-wrap: anywhere; }
+.trace-duration { margin-left: auto; white-space: nowrap; font-size: 10px; color: #62776a; }
+.real-trace li p { line-height: 1.6; overflow-wrap: anywhere; }
+.rejected-section { margin-top: 18px; }
+.rejected-section h3 { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #815d18; }
+.rejected-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.rejected-list li { background: #fff8e9; border: 1px solid #f0e4c5; border-radius: 9px; padding: 12px; }
+.rejected-list strong { font-size: 12px; color: #74551b; }
+.rejected-list p { font-size: 12px; line-height: 1.6; color: #786943; margin: 5px 0 0; }
+.agent-waiting { display: flex; align-items: center; gap: 10px; padding: 20px; font-size: 13px; color: #426e50; }

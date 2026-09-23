@@ -1,4 +1,4 @@
-import type { CompleteResponse as ApiComplete, EmployeeProfile as ApiProfile, HROverview as ApiHr, Lang, RecommendationResponse as ApiRecommendations, Role, UploadResult } from './types'
+import type { CompleteResponse as ApiComplete, EmployeeProfile as ApiProfile, FeedbackResponse, HROverview as ApiHr, Lang, RecommendationResponse as ApiRecommendations, Role, UploadResult } from './types'
 import type { CompleteResponse, EmployeeProfile, EmployeeSummary, HrOverview, RecommendationResponse } from './view'
 
 export type ApiContext = { role: Role; employeeId: string; language: Lang }
@@ -32,7 +32,11 @@ function profileView(source: ApiProfile): EmployeeProfile {
 
 function recommendationsView(source: ApiRecommendations): RecommendationResponse {
   return {
-    recommendations: source.recommendations.map(item => ({ ...item, upcoming_sessions: item.next_session ? [item.next_session] : [] })),
+    source: source.source,
+    model: source.model,
+    latency_ms: source.latency_ms,
+    summary: source.summary,
+    recommendations: source.recommendations.map(item => ({ ...item, gains: item.gains.map(gain => ({ ...gain, skill_name: gain.name })), upcoming_sessions: item.next_session ? [item.next_session] : [] })),
     rejected: source.rejected,
     trace: source.trace,
   }
@@ -55,7 +59,7 @@ export const api = {
     const source = await request<ApiComplete>(`/employees/${encodeURIComponent(id)}/complete`, context, { method: 'POST', body: JSON.stringify({ event_id: eventId }) })
     return { readiness_before_pct: source.readiness_before, readiness_after_pct: source.readiness_after, profile: profileView(source.profile) }
   },
-  feedback: (id: string, eventId: string, context: ApiContext) => request<unknown>(`/employees/${encodeURIComponent(id)}/feedback`, context, { method: 'POST', body: JSON.stringify({ event_id: eventId }) }),
+  feedback: (id: string, eventId: string, context: ApiContext) => request<FeedbackResponse>(`/employees/${encodeURIComponent(id)}/feedback`, context, { method: 'POST', body: JSON.stringify({ event_id: eventId }) }),
   hr: async (context: ApiContext): Promise<HrOverview> => hrView(await request<ApiHr>('/hr/overview', context)),
   upload: (files: File[], context: ApiContext): Promise<UploadResult> => {
     const form = new FormData()
