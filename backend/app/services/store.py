@@ -42,7 +42,7 @@ class DataStore:
             self.snoozed: dict[str, set[str]] = defaultdict(set)  # «Не сейчас»: hidden from recommendations
             result = _empty_result()
             for name in ("skills.json", "events.json", "employees.json"):
-                self._ingest_json(json.loads((self.data_dir / name).read_text("utf-8-sig")), result)
+                self._ingest_json(json.loads((self.data_dir / name).read_text("utf-8-sig")), result, initial=True)
             self._ingest_csv((self.data_dir / "activity_history.csv").read_text("utf-8-sig"), result)
             self._touch()
 
@@ -65,7 +65,7 @@ class DataStore:
                         self._ingest_csv(text, result, replace_history=True)
                     else:
                         self._ingest_json(json.loads(text), result)
-                except (json.JSONDecodeError, ValueError, KeyError) as e:
+                except (json.JSONDecodeError, ValueError, KeyError, TypeError, AttributeError) as e:
                     result.warnings.append(f"{filename}: не удалось разобрать ({e})")
             self._touch()
         # newly added employees first — the UI links to them
@@ -74,11 +74,14 @@ class DataStore:
         result.employee_ids = list(dict.fromkeys(added + rest))[:100]
         return result
 
-    def _ingest_json(self, obj, result: UploadResult) -> None:
+    def _ingest_json(self, obj, result: UploadResult, initial: bool = False) -> None:
         if isinstance(obj, dict):
-            meta = obj.get("meta") or {}
-            if meta.get("as_of_date"):
+            meta = obj.get("meta") if isinstance(obj.get("meta"), dict) else {}
+            if meta.get("as_of_date") and initial:
                 self.as_of = dt.date.fromisoformat(meta["as_of_date"])
+            elif meta.get("as_of_date") and str(meta["as_of_date"]) != self.as_of.isoformat():
+                # an upload adds profiles; it must not move «today» for all 200 employees
+                result.warnings.append(f"meta.as_of_date={meta['as_of_date']} проигнорирована: дата расчёта {self.as_of}")
             if obj.get("proficiency_scale"):
                 self.proficiency_scale = obj["proficiency_scale"]
             known = False
@@ -98,14 +101,16 @@ class DataStore:
                 self._upsert(_guess_kind(obj), obj, result)
         elif isinstance(obj, list):
             for item in obj:
-                if isinstance(item, dict):
-                    self._upsert(_guess_kind(item), item, result)
+                self._upsert(_guess_kind(item) if isinstance(item, dict) else None, item, result)
+        else:
+            result.warnings.append("Файл не содержит объектов датасета")
 
     def _ingest_csv(self, text: str, result: UploadResult, replace_history: bool = False) -> None:
         """All-or-nothing: a file with any invalid row changes nothing, so a bad upload never wipes history."""
         first = text.split("\n", 1)[0]
         delimiter = ";" if first.count(";") > first.count(",") else ","
-        rows = [{(k or "").strip().lower(): (v or "").strip() for k, v in r.items()}
+        # k is None when a row has more values than the header — ignore the overflow instead of crashing
+        rows = [{k.strip().lower(): (v if isinstance(v, str) else "").strip() for k, v in r.items() if k is not None}
                 for r in csv.DictReader(io.StringIO(text), delimiter=delimiter)]
         records: list[HistoryRecord] = []
         errors: list[str] = []
@@ -135,6 +140,9 @@ class DataStore:
             result.employee_ids.append(rec.employee_id)
 
     def _upsert(self, kind: str | None, item: dict, result: UploadResult) -> None:
+        if not isinstance(item, dict):
+            result.warnings.append(f"Пропущен элемент {str(item)[:40]!r}: ожидается объект JSON")
+            return
         try:
             if kind == "skill":
                 obj = Skill.model_validate(item)

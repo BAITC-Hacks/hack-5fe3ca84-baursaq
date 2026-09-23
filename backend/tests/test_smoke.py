@@ -52,6 +52,21 @@ def test_bad_history_csv_changes_nothing(client):
     assert len(client.get("/api/employees/E0001", headers=HR).json()["history"]) == before
 
 
+def test_malformed_uploads_warn_instead_of_500(client):
+    """Found in QA audit: null/str items, extra CSV values and a foreign meta date broke or shifted the store."""
+    files = [
+        ("files", ("employees.json", json.dumps({"meta": {"as_of_date": "2030-01-01"}, "employees": [None, "bad"]}),
+                   "application/json")),
+        ("files", ("activity_history.csv",
+                   "record_id,employee_id,event_id,date,status,completion_pct\nQA1,E0001,EV_005,2026-09-20,completed,100,X",
+                   "text/csv")),
+        ("files", ("scalar.json", "42", "application/json")),
+    ]
+    r = client.post("/api/dataset/upload", headers=HR, files=files)
+    assert r.status_code == 200 and len(r.json()["warnings"]) >= 3
+    assert client.get("/api/health").json()["as_of"] == "2026-10-01"
+
+
 def test_complete_respects_eligibility(client):
     """Found in review: a Junior could 'complete' a Middle+ workshop and get free skill points."""
     r = client.post("/api/employees/E0001/complete", headers=HR, json={"event_id": "EV_006"})
