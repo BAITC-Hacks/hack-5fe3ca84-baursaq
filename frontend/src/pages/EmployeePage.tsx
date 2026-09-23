@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, CalendarDays, Check, CheckCircle2, Clock3, Compass, RotateCcw, Sparkles, Target, XCircle } from 'lucide-react'
 import RecommendationDetails from '../components/RecommendationDetails'
 import { api, type ApiContext } from '../api/client'
@@ -24,13 +24,20 @@ export default function EmployeePage({ context }: { context: ApiContext }) {
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
 
-  const load = useCallback(async () => {
+  const load = async () => {
     setLoading(true); setError(''); setResult(null)
     try { setProfile(await api.employee(context.employeeId, context)) }
     catch (cause) { setError((cause as Error).message) }
     finally { setLoading(false) }
+  }
+  useEffect(() => {
+    let active = true
+    api.employee(context.employeeId, context)
+      .then(data => { if (active) setProfile(data) })
+      .catch(cause => { if (active) setError((cause as Error).message) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
   }, [context])
-  useEffect(() => { void load() }, [load])
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(''), 4500); return () => clearTimeout(timer) }, [toast])
 
   const recommend = async () => {

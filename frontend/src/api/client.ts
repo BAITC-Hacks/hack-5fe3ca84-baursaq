@@ -9,8 +9,11 @@ async function request<T>(path: string, context: ApiContext, init: RequestInit =
   headers.set('X-Employee-Id', context.employeeId)
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   let response: Response
-  try { response = await fetch(`/api${path}`, { ...init, headers }) }
-  catch { throw new Error('Нет связи с сервером. Проверьте, что API запущен.') }
+  try { response = await fetch(`/api${path}`, { ...init, headers, signal: init.signal ?? AbortSignal.timeout(20000) }) }
+  catch (cause) {
+    if (cause instanceof Error && cause.name === 'TimeoutError') throw new Error('Сервер не ответил за 20 секунд. Попробуйте ещё раз.')
+    throw new Error('Нет связи с сервером. Проверьте, что API запущен.')
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => null)
     throw new Error(typeof body?.detail === 'string' ? body.detail : `Сервер вернул ошибку ${response.status}`)
