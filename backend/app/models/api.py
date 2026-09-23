@@ -185,6 +185,16 @@ class CompleteRequest(BaseModel):
     feedback_rating: int | None = None
 
 
+class FeedbackRequest(BaseModel):
+    event_id: str
+    action: Literal["not_now"] = "not_now"
+
+
+class FeedbackResponse(BaseModel):
+    status: Literal["snoozed"]
+    event_id: str
+
+
 class CompleteResponse(BaseModel):
     record: HistoryRecord
     changes: list[SkillDelta]

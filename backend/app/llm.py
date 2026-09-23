@@ -17,7 +17,7 @@ log = logging.getLogger("llm")
 T = TypeVar("T", bound=BaseModel)
 
 # USD per 1M tokens (input, output) — rough, only for the cost estimate in logs
-PRICES = {
+PRICES = {  # unknown models are logged with cost 0 — check real spend in the OpenAI dashboard
     "gpt-5-mini": (0.25, 2.0),
     "gpt-5": (1.25, 10.0),
     "gpt-5-nano": (0.05, 0.4),

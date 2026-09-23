@@ -18,8 +18,8 @@ class Settings(BaseSettings):
 
     openai_api_key: str = ""
     openai_base_url: str | None = None
-    openai_model: str = "gpt-5-mini"
-    openai_reasoning_effort: str = "low"  # empty string -> parameter is not sent
+    openai_model: str = "gpt-6-luna"
+    openai_reasoning_effort: str = "none"  # empty string -> parameter is not sent
     llm_timeout_s: float = 9.0  # ТЗ: AI recommendation must arrive within 10 s
 
     # Optional second provider (NVIDIA NIM is OpenAI-compatible)

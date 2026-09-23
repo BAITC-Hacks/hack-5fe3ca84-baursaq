@@ -39,6 +39,7 @@ class DataStore:
             self.employees: dict[str, Employee] = {}
             self.events: dict[str, Event] = {}
             self.history: dict[str, HistoryRecord] = {}
+            self.snoozed: dict[str, set[str]] = defaultdict(set)  # «Не сейчас»: hidden from recommendations
             result = _empty_result()
             for name in ("skills.json", "events.json", "employees.json"):
                 self._ingest_json(json.loads((self.data_dir / name).read_text("utf-8-sig")), result)
@@ -101,16 +102,37 @@ class DataStore:
                     self._upsert(_guess_kind(item), item, result)
 
     def _ingest_csv(self, text: str, result: UploadResult, replace_history: bool = False) -> None:
+        """All-or-nothing: a file with any invalid row changes nothing, so a bad upload never wipes history."""
         first = text.split("\n", 1)[0]
         delimiter = ";" if first.count(";") > first.count(",") else ","
         rows = [{(k or "").strip().lower(): (v or "").strip() for k, v in r.items()}
                 for r in csv.DictReader(io.StringIO(text), delimiter=delimiter)]
+        records: list[HistoryRecord] = []
+        errors: list[str] = []
+        for line, r in enumerate(rows, start=2):
+            try:
+                rec = HistoryRecord.model_validate({**r, "record_id": r.get("record_id") or "_new"})
+            except ValidationError as e:
+                errors.append(f"строка {line}: {e.errors()[0]['loc'][0]} — {e.errors()[0]['msg']}")
+                continue
+            if rec.employee_id not in self.employees or rec.event_id not in self.events:
+                errors.append(f"строка {line}: неизвестный сотрудник {rec.employee_id} или мероприятие {rec.event_id}")
+                continue
+            records.append(rec)
+        if errors:
+            result.warnings.append(
+                f"История не импортирована, данные не изменены ({len(errors)} ошибок): " + "; ".join(errors[:5]))
+            return
         if replace_history:
-            for emp_id in {r.get("employee_id") for r in rows}:
-                for rid in [rid for rid, h in self.history.items() if h.employee_id == emp_id]:
-                    del self.history[rid]
-        for r in rows:
-            self._upsert("history", r, result)
+            replaced = {rec.employee_id for rec in records}
+            self.history = {rid: h for rid, h in self.history.items() if h.employee_id not in replaced}
+        for rec in records:
+            clash = self.history.get(rec.record_id)
+            if rec.record_id == "_new" or (clash and clash.employee_id != rec.employee_id):
+                rec = rec.model_copy(update={"record_id": self.next_record_id()})  # never overwrite another person
+            self._count(result, "history", rec.record_id in self.history)
+            self.history[rec.record_id] = rec
+            result.employee_ids.append(rec.employee_id)
 
     def _upsert(self, kind: str | None, item: dict, result: UploadResult) -> None:
         try:
@@ -180,6 +202,12 @@ class DataStore:
         with self.lock:
             self.history[record.record_id] = record
             self._touch()
+
+    def snooze(self, employee_id: str, event_id: str) -> None:
+        """Voluntariness: «Не сейчас» hides the step without writing a refusal into the history."""
+        with self.lock:
+            self.snoozed[employee_id].add(event_id)
+            self.version += 1
 
 
 def _empty_result() -> UploadResult:

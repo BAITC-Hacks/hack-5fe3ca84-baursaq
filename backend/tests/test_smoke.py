@@ -43,6 +43,34 @@ def test_permissions(client):
     assert hr["lagging_skills"] and hr["participation"]
 
 
+def test_bad_history_csv_changes_nothing(client):
+    """Found in review: a CSV with an unknown event used to wipe the employee's history."""
+    before = len(client.get("/api/employees/E0001", headers=HR).json()["history"])
+    csv = "record_id,employee_id,event_id,date,status,completion_pct\nR999999,E0001,EV_999,2026-09-01,completed,100"
+    up = client.post("/api/dataset/upload", headers=HR, files=[("files", ("activity_history.csv", csv, "text/csv"))])
+    assert up.status_code == 200 and up.json()["warnings"]
+    assert len(client.get("/api/employees/E0001", headers=HR).json()["history"]) == before
+
+
+def test_complete_respects_eligibility(client):
+    """Found in review: a Junior could 'complete' a Middle+ workshop and get free skill points."""
+    r = client.post("/api/employees/E0001/complete", headers=HR, json={"event_id": "EV_006"})
+    assert r.status_code == 409
+    club = client.post("/api/employees/E0028/complete", headers=HR, json={"event_id": "EV_036"})
+    again = client.post("/api/employees/E0028/complete", headers=HR, json={"event_id": "EV_036"})
+    assert club.status_code == 200 and again.status_code == 409  # recurring club: same day counts once
+
+
+def test_not_now_hides_step_without_touching_history(client):
+    first = client.post("/api/employees/E0028/recommendations", headers=HR, json={}).json()["recommendations"][0]
+    history = len(client.get("/api/employees/E0028", headers=HR).json()["history"])
+    r = client.post("/api/employees/E0028/feedback", headers=HR, json={"event_id": first["event_id"]})
+    assert r.status_code == 200 and r.json()["status"] == "snoozed"
+    again = client.post("/api/employees/E0028/recommendations", headers=HR, json={}).json()["recommendations"]
+    assert first["event_id"] not in {x["event_id"] for x in again}
+    assert len(client.get("/api/employees/E0028", headers=HR).json()["history"]) == history
+
+
 def test_upload_jury_like_trap_profile(client):
     """Lowest skill is Public Speaking, but 3 no-shows at the speaking club; System Design is critical for Senior."""
     emp = {

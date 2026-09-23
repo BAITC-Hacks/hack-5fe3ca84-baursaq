@@ -11,6 +11,7 @@ TODO(A1, see docs/TEAM_PLAN.md): turn step 2 into a tool-calling agent on the Op
 
 import json
 import time
+from collections import Counter
 
 from pydantic import BaseModel
 
@@ -94,12 +95,11 @@ async def recommend(store: DataStore, emp_id: str, lang: str | None = None) -> R
 
     s = time.perf_counter()
     cands, blocked = engine.candidates(ctx)
-    reasons = {"mandatory": 0, "audience": 0, "completed": 0, "no_sessions": 0, "prereq": 0}
-    for _, r in blocked:
-        reasons[r.split(":")[0]] += 1
+    reasons = Counter(r.split(":")[0] for _, r in blocked)
     tool("list_candidates", f"{len(cands)} доступны; отсеяно: {reasons['mandatory']} обязательных, "
          f"{reasons['audience']} не для роли/грейда, {reasons['completed']} уже пройдено, "
-         f"{reasons['prereq']} не хватает пререквизитов, {reasons['no_sessions']} без сессий", s)
+         f"{reasons['prereq']} не хватает пререквизитов, {reasons['no_sessions']} без сессий"
+         + (f", {reasons['snoozed']} отложено сотрудником" if reasons["snoozed"] else ""), s)
 
     s = time.perf_counter()
     steps = engine.plan(ctx)

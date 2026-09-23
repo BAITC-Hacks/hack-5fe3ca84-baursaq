@@ -225,6 +225,8 @@ def eligibility(ctx: Ctx, ev: Event, skills: dict[str, int]) -> str | None:
         return "audience"
     if ev.event_id in ctx.signals.completed and ev.event_id not in RECURRING:
         return "completed"
+    if ev.event_id in ctx.store.snoozed.get(emp.employee_id, ()):
+        return "snoozed"
     if not availability(ev, ctx.store.as_of)[0]:
         return "no_sessions"
     for sid, need in ev.prerequisites.items():
@@ -538,11 +540,14 @@ def complete(store: DataStore, emp_id: str, event_id: str, score: int | None = N
              feedback: int | None = None) -> CompleteResponse:
     before = build_context(store, emp_id)
     ev = store.events[event_id]
-    if event_id in before.signals.completed and event_id not in RECURRING:
-        raise ValueError("already_completed")
+    reason = eligibility(before, ev, before.effective)  # same rules as recommendations: no free skill points
+    if reason and reason != "snoozed":
+        raise ValueError(reason)
     existing = next((h for h in before.history if h.event_id == event_id and h.status == "in_progress"), None)
     review = before.emp.last_review_date
     day = max(store.as_of, review + dt.timedelta(days=1)) if review else store.as_of
+    if any(h.event_id == event_id and h.status == "completed" and h.date == day for h in before.history):
+        raise ValueError("completed")  # recurring club: a double click on the same day counts once
     record = HistoryRecord(
         record_id=existing.record_id if existing else store.next_record_id(), employee_id=emp_id,
         event_id=event_id, date=day, status="completed", completion_pct=100,

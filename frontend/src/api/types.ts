@@ -230,6 +230,12 @@ export interface HistoryRecord {
   assigned_by: string
 }
 
+// POST /employees/{id}/feedback {event_id} — «Не сейчас»: hides the step, history is not touched
+export interface FeedbackResponse {
+  status: 'snoozed'
+  event_id: string
+}
+
 export interface CompleteResponse {
   record: HistoryRecord
   changes: SkillDelta[]

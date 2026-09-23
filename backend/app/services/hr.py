@@ -34,8 +34,12 @@ def overview(store: DataStore) -> HROverview:
 
         if not engine.plan(ctx, k=1):
             open_gaps = engine.gaps(ctx)
+            closers = [c for c in engine.candidates(ctx)[0] if c.closes_gap]
             if not open_gaps:
                 reason = "Требования цели выполнены — обсудить повышение"
+            elif closers:
+                titles = ", ".join(c.event.title for c in closers[:2])
+                reason = f"Активности есть ({titles}), но по похожим были срывы — нужен разговор, а не назначение"
             else:
                 names = ", ".join(ctx.skill_name(sid) for sid, _, _ in open_gaps[:3])
                 reason = f"Нет доступных активностей для: {names}"
