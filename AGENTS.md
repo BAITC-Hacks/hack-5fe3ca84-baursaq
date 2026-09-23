@@ -78,11 +78,14 @@ LLM не придумывает мероприятия и цифры: все ф�
 | POST | `/api/dataset/upload` | HR | multipart `files`: employees.json / activity_history.csv / events.json / skills.json |
 | POST | `/api/dataset/reset` | HR | вернуть исходный датасет |
 
-### Владение файлами (чтобы не ловить конфликты)
-- **A — Backend/AI:** `backend/**`
-- **B — Frontend/Demo:** `frontend/**`
-- **C — Product/QA/Ops:** `README.md`, `docs/**`, `data/test_profiles/**`, `scripts/**`, `Dockerfile`,
-  `docker-compose.yml`, деплой
+### Кто что делает (с 16:15) — задания в `docs/tasks/`
+Схема: **Claude — лид/интегратор** (архитектура, ревью, проверка `main`, мелкие фиксы движка/API);
+**три Codex (GPT) — исполнители**, каждый строго в своих файлах; люди решают и пушат.
+- **Azamat → `docs/tasks/AZAMAT.md`:** `backend/app/agents/**`, `backend/app/llm.py`, `backend/tests/test_agent.py`
+- **Umar → `docs/tasks/UMAR.md`:** `frontend/src/**` (кроме контракта `api/types.ts`)
+- **Aniyar → `docs/tasks/ANIYAR.md`:** `README.md`, `Dockerfile`, `docker-compose.yml`, `run.py`,
+  `data/test_profiles/**`, `scripts/**`, `docs/**`
+- **Claude:** `backend/app/services/**`, `routers/**`, `models/api.py` + `frontend/src/api/types.ts`, `AGENTS.md`
 - В чужие файлы — только договорившись в чате. `package-lock.json` / `uv.lock` меняет только владелец папки.
 
 ## 1. МИССИЯ И DEFINITION OF DONE
@@ -126,11 +129,12 @@ T+3:00  Сабмит: линк, репозиторий, README, тег `submissi
 (он уже даёт объяснение по ≥3 факторам).  3) HR-вид — одна таблица вместо графиков.
 Всегда сохраняем: happy-path + загрузку профилей + объяснение + запуск одной командой.
 
-## 6. РОЛИ (кто есть кто — договориться и вписать)
-- **A — BACKEND/AI:** стор, движок, LLM-агент, API, ключи и расход токенов. → ______
-- **B — FRONTEND/DEMO:** экран сотрудника, экран HR, загрузка, состояния загрузки/ошибок, бэкап-видео. → ______
-- **C — PRODUCT/QA/OPS:** README, тестовые профили + eval-скрипт, Docker/деплой, питч, скриншоты Codex,
-  таймкипер и раздел 8. → ______
+## 6. РОЛИ
+- **Azamat — BACKEND/AI:** LLM-агент с инструментами, ключ и расход токенов, решения по продукту.
+- **Umar — FRONTEND/DEMO:** экран сотрудника и HR, загрузка, состояния, бэкап-видео.
+- **Aniyar — PLATFORM/QA/SUBMISSION:** запуск одной командой, README, тестовые профили + eval, финальная
+  проверка, тег `submission` и кнопка «Сдать решение» на платформе.
+- **Claude — ЛИД/ИНТЕГРАТОР:** движок и API, ревью всех коммитов, проверка `main` после каждого пуша.
 
 ## 7. КОНВЕНЦИИ ДЛЯ AI-АГЕНТОВ (Codex / Claude — читать перед генерацией)
 СТЕК: Python 3.11+ · FastAPI · Pydantic v2 · `uv`. Frontend: React 19 + TS + Vite 8 + Tailwind 4,
@@ -153,13 +157,13 @@ recharts, lucide-react. БД не нужна: датасет маленький,
   - Коммиты маленькие и осмысленные: `feat(backend): ...`, `fix(frontend): ...`, тег `[codex]` для кода от Codex.
 
 ## 8. LIVE-СТАТУС (обновляет C каждые 30 минут)
-ТЕКУЩАЯ ФАЗА: [x] выбор задачи [x] скелет [ ] AI-интеграция [ ] happy-path [ ] деплой [ ] polish [ ] сабмит
+ТЕКУЩАЯ ФАЗА: [x] выбор задачи [x] скелет [x] AI-интеграция [x] happy-path [ ] запуск 1 командой [ ] polish [ ] сабмит
 ВЫБРАННАЯ ЗАДАЧА: Halyk Bank · Career Quest (кейс 1)
-ГОТОВО (15:20): бэкенд целиком на детерминированном движке (профиль, рекомендации + объяснение ≥3 факторов,
-  «пройдено», HR-обзор, загрузка профилей), 6 smoke-тестов зелёные; типы + клиент API для фронта.
-СЛЕДУЮЩЕЕ ДЕЙСТВИЕ (одно, конкретное): A — ключ в backend/.env и реальный LLM-ответ (GATE-2); B — экран сотрудника; C — ловушки + Docker
+ГОТОВО (16:15): реальный ИИ (gpt-6-luna, 3.6–7 с, kk/ru/en) · UI сотрудника и HR (Umar) · 9 тестов ·
+  баги из ревью Анияра исправлены (атомарный импорт, проверка «пройдено», «Не сейчас»).
+СЛЕДУЮЩЕЕ: параллельно docs/tasks/AZAMAT.md, UMAR.md, ANIYAR.md; Claude сверяет main после каждого пуша.
 БЛОКЕРЫ: ___________________________________________________
-ЧЕК-ЛИСТ ГЕЙТОВ: [ ] GATE-2 реальный AI  [ ] docker compose  [ ] живой линк  [ ] FREEZE
+ЧЕК-ЛИСТ ГЕЙТОВ: [x] GATE-2 реальный AI  [ ] docker compose  [ ] FREEZE  [ ] тег submission + «Сдать решение»
 ССЫЛКИ: prod ______  repo https://github.com/BAITC-Hacks/hack-5fe3ca84-baursaq
 
 ## 9. ПРОДУКТ В ОДНОМ ЭКРАНЕ

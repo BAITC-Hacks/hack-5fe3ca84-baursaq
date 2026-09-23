@@ -36,13 +36,15 @@ class CallMeta:
     latency_ms: int
 
 
-_clients: dict[str, AsyncOpenAI] = {}
+_clients: dict[tuple[str, int], AsyncOpenAI] = {}
 
 
 def _client(name: str, key: str, base_url: str | None) -> AsyncOpenAI:
-    if name not in _clients:
-        _clients[name] = AsyncOpenAI(api_key=key, base_url=base_url, max_retries=0)
-    return _clients[name]
+    # one client per event loop: a client bound to a closed loop fails ("Event loop is closed") in scripts/tests
+    k = (name, id(asyncio.get_running_loop()))
+    if k not in _clients:
+        _clients[k] = AsyncOpenAI(api_key=key, base_url=base_url, max_retries=0)
+    return _clients[k]
 
 
 def _providers():
