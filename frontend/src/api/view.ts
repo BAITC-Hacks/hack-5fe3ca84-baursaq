@@ -54,6 +54,7 @@ export interface EmployeeProfile extends EmployeeSummary {
 }
 
 export interface Factor {
+  impact?: number
   label?: string
   detail?: string
   name?: string
