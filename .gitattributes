@@ -1,0 +1,12 @@
+# Normalize line endings for a mixed Windows/macOS/Linux team (and Linux Docker images)
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.zip binary
+*.docx binary
+*.pdf binary
