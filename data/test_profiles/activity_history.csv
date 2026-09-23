@@ -1,0 +1,5 @@
+record_id,employee_id,event_id,date,due_date,status,completion_pct,score,feedback_rating,assigned_by
+TH001_1,T001,EV_036,2026-06-10,,no_show,0,,,self
+TH001_2,T001,EV_036,2026-07-10,,no_show,0,,,self
+TH001_3,T001,EV_036,2026-08-10,,no_show,0,,,self
+TH002_1,T002,EV_006,2026-09-15,,completed,100,90,5,self
