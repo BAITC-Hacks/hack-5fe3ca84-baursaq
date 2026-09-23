@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,6 +22,7 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-6-luna"
     openai_reasoning_effort: str = "none"  # empty string -> parameter is not sent
     llm_timeout_s: float = 9.0  # ТЗ: AI recommendation must arrive within 10 s
+    agent_mode: Literal["single", "tools"] = "single"
 
     # Optional second provider (NVIDIA NIM is OpenAI-compatible)
     fallback_api_key: str = ""
