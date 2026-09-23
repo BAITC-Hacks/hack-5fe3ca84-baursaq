@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { BriefcaseBusiness, ChevronDown, Compass, Users } from 'lucide-react'
+import { BriefcaseBusiness, ChevronDown, Users } from 'lucide-react'
 import { api, type ApiContext } from './api/client'
 import type { EmployeeSummary, Language, Role } from './api/view'
 import EmployeePage from './pages/EmployeePage'
@@ -29,7 +29,7 @@ function App() {
   const selected = employees.find(item => item.employee_id === employeeId)
   return <div className="app-shell">
     <header className="topbar">
-      <div className="brand"><div className="brand-mark"><Compass size={23} strokeWidth={2.3} /></div><div><strong>Career Quest</strong><span>Ваш путь к следующему уровню</span></div></div>
+      <div className="brand"><img src="/halyk-logo.png" alt="" width={40} height={40} /><div><strong>Career Quest</strong><span>Ваш путь к следующему уровню</span></div></div>
       <div className="top-controls">
         <div className="role-switch" aria-label="Роль">
           <button className={role === 'employee' ? 'active' : ''} onClick={() => setRole('employee')}><BriefcaseBusiness size={16} /> Сотрудник</button>
