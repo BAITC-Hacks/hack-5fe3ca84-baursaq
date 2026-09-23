@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, BarChart3, RotateCcw, UploadCloud, Users } from 'lucide-react'
+import { AlertTriangle, BarChart3, RotateCcw, UploadCloud, Users, Compass, CalendarCheck, Route, HeartHandshake } from 'lucide-react'
 import { api, type ApiContext } from '../api/client'
 import type { UploadResult } from '../api/types'
 import type { HrOverview } from '../api/view'
+import LoadingSkeleton from '../components/LoadingSkeleton'
 import SkillChart from '../components/SkillChart'
 
 const acceptedFiles = ['employees.json', 'activity_history.csv', 'events.json', 'skills.json']
@@ -78,7 +79,7 @@ export default function HrPage({ context, onDatasetChange, onOpenEmployee }: {
   const visibleParticipation = participation.filter(item => !onlyVoluntary || !item.mandatory)
   const noStep = overview?.no_next_step ?? overview?.without_recommendations ?? []
   const disengaged = overview?.disengaged ?? []
-  const chart = skills.slice(0, 8).map(skill => ({
+  const chart = [...skills].sort((a, b) => (b.count ?? b.employee_count ?? 0) - (a.count ?? a.employee_count ?? 0)).slice(0, 8).map(skill => ({
     name: skill.name ?? skill.skill_name ?? skill.skill_id?.replace(/^SK_/, '').replaceAll('_', ' ') ?? 'Навык',
     count: skill.count ?? skill.employee_count ?? 0,
   }))
@@ -90,15 +91,16 @@ export default function HrPage({ context, onDatasetChange, onOpenEmployee }: {
     </div>
     {error && <div className="alert" role="alert">{error}<button onClick={() => setError('')}>Закрыть</button></div>}
     {message && <div className="success-note" role="status">{message}</div>}
-    {loading && <div className="refresh-status" role="status"><div className="mini-spinner" /> Загружаем аналитику…</div>}
+    {loading && !overview && <LoadingSkeleton label="Загружаем обзор развития команды…" />}
+    {loading && overview && <div className="refresh-status" role="status"><div className="mini-spinner" /> Загружаем аналитику…</div>}
     {!loading && !overview && <div className="empty-state"><h2>Не удалось загрузить аналитику</h2><button className="button primary" onClick={load}>Повторить</button></div>}
     {overview && <div className="hr-summary">
-      <div className="summary-card"><span>Навыков с разрывом</span><strong>{skills.length}</strong><small>в целевых профилях</small></div>
-      <div className="summary-card"><span>Активностей в отчёте</span><strong>{participation.length}</strong><small>по истории участия</small></div>
-      <div className="summary-card"><span>Без следующего шага</span><strong>{noStep.length}</strong><small>нужна проверка цели</small></div>
-      <div className="summary-card"><span>Требуют внимания</span><strong>{disengaged.length}</strong><small>участие снизилось</small></div>
+      <div className="summary-card"><span className="kpi-icon"><Compass size={20} /></span><span>Навыков с разрывом</span><strong>{skills.length}</strong><small>есть потребность в развитии</small></div>
+      <div className="summary-card"><span className="kpi-icon"><CalendarCheck size={20} /></span><span>Активностей в отчёте</span><strong>{participation.length}</strong><small>по истории участия</small></div>
+      <div className="summary-card"><span className="kpi-icon"><Route size={20} /></span><span>Без следующего шага</span><strong>{noStep.length}</strong><small>нужна проверка цели</small></div>
+      <div className="summary-card attention"><span className="kpi-icon"><HeartHandshake size={20} /></span><span>Требуют внимания</span><strong>{disengaged.length}</strong><small>повод предложить поддержку</small></div>
     </div>}
-    <div className="hr-grid">
+    {overview && <div className="hr-grid">
       <section className="card">
         <div className="section-title"><div><span className="icon-chip"><BarChart3 size={19} /></span><h2>Чаще всего отстают</h2></div></div>
         <p className="muted">Сотрудников с разрывом до целевого уровня навыка</p>
@@ -106,14 +108,14 @@ export default function HrPage({ context, onDatasetChange, onOpenEmployee }: {
       </section>
       <section className="card">
         <div className="section-title"><div><span className="icon-chip"><UploadCloud size={19} /></span><h2>Загрузка профилей</h2></div></div>
-        <p className="muted">Добавьте профили и историю в формате датасета. Новые сотрудники появятся в поиске.</p>
+        <p className="muted">Добавьте профили JSON и историю CSV вместе — рекомендации учтут опыт новых сотрудников.</p>
         <div className={`drop-zone ${dragging ? 'dragging' : ''}`} aria-busy={!!busy}
           onDragOver={event => { event.preventDefault(); if (!busy) setDragging(true) }}
           onDragLeave={() => setDragging(false)}
           onDrop={event => { event.preventDefault(); setDragging(false); void upload(Array.from(event.dataTransfer.files)) }}>
           <UploadCloud size={28} aria-hidden="true" />
           <strong>{busy === 'upload' ? 'Загружаем файлы…' : 'Перетащите файлы сюда'}</strong>
-          <span>{acceptedFiles.join(' · ')}</span>
+          <span>employees.json + activity_history.csv</span><small>Также поддерживаются events.json и skills.json</small>
           <button className="button secondary" onClick={() => fileInput.current?.click()} disabled={!!busy}>Выбрать файлы</button>
           <input ref={fileInput} type="file" aria-label="Файлы датасета" multiple accept=".json,.csv" hidden
             onChange={event => { void upload(Array.from(event.target.files ?? [])); event.target.value = '' }} disabled={!!busy} />
@@ -130,17 +132,17 @@ export default function HrPage({ context, onDatasetChange, onOpenEmployee }: {
         </div>}
         <button className="button text reset-button" disabled={!!busy} onClick={reset}><RotateCcw size={15} />{busy === 'reset' ? 'Восстанавливаем…' : 'Восстановить исходные данные'}</button>
       </section>
-    </div>
+    </div>}
     {overview && <div className="hr-grid">
-      <section className="card">
+      <section className="card participation-card">
         <div className="section-title"><div><span className="icon-chip"><Users size={19} /></span><h2>Участие по активностям</h2></div></div>
         <label className="participation-filter"><input type="checkbox" checked={onlyVoluntary} onChange={event => setOnlyVoluntary(event.target.checked)} /> Только добровольные</label>
         <p className="muted small">Показано {visibleParticipation.length} из {participation.length} активностей</p>
         {visibleParticipation.length ? <div className="table-scroll" tabIndex={0} aria-label="Таблица участия по активностям">
-          <table><thead><tr><th scope="col">Активность</th><th scope="col">Пройдено</th><th scope="col">Не пришли</th><th scope="col">Отказ</th></tr></thead>
+          <table><thead><tr><th scope="col">Активность</th><th scope="col">Пройдено</th><th scope="col">Не пришли</th><th scope="col">Отказ</th><th scope="col">В процессе</th><th scope="col">Прервано</th><th scope="col">Просрочено</th></tr></thead>
             <tbody>{visibleParticipation.map(item => <tr key={item.event_id}>
               <td>{item.title}{item.mandatory && <span className="mandatory-badge">Обязательное</span>}</td>
-              <td>{item.completed}</td><td>{item.no_show}</td><td>{item.declined}</td>
+              <td>{item.completed}</td><td>{item.no_show}</td><td>{item.declined}</td><td>{item.in_progress}</td><td>{item.dropped}</td><td>{item.overdue}</td>
             </tr>)}</tbody>
           </table>
         </div> : <p className="muted">{onlyVoluntary ? 'Добровольных активностей в отчёте пока нет. Снимите фильтр, чтобы увидеть все.' : 'Данных об участии пока нет.'}</p>}

@@ -10,7 +10,8 @@ export default function RecommendationDetails({ result, children }: { result: Re
       {isAI ? <Sparkles size={15} aria-hidden="true" /> : <ShieldCheck size={15} aria-hidden="true" />}
       <span>{isAI ? `AI · ${result.model ?? 'модель не указана'} · ${(result.latency_ms / 1000).toFixed(1)} с` : 'Резервный режим — объяснение от движка'}</span>
     </div>
-    {result.summary && <p className="recommendation-summary">{result.summary}</p>}
+    {result.summary && <details className="plan-summary"><summary>Общий замысел плана</summary><p className="recommendation-summary">{result.summary}</p></details>}
+    {children}
     {result.trace.length > 0 && <details className="trace-details">
       <summary>Как агент пришёл к решению</summary>
       <ol className="real-trace">
@@ -27,7 +28,6 @@ export default function RecommendationDetails({ result, children }: { result: Re
         })}
       </ol>
     </details>}
-    {children}
     {result.rejected.length > 0 && <section className="rejected-section" aria-label="Почему не другой шаг?">
       <h3><Lightbulb size={18} aria-hidden="true" /> Почему не другой шаг?</h3>
       <ul className="rejected-list">
