@@ -1,0 +1,16 @@
+.git
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/*.egg-info
+**/.env
+**/.env.*
+**/*.log
+files
+HACKATHON
+.claude
+.codex
+.agents
