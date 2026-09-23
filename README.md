@@ -4,3 +4,4 @@ Hackathon team repository for baursaq
 ## Participants
 
 - Aniyar Baibossyn
+- Umar Kumyrkan
