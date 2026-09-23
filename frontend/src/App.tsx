@@ -27,13 +27,13 @@ function App() {
   }, [search, reloadKey, role, employeeId, language])
 
   const selected = employees.find(item => item.employee_id === employeeId)
-  return <div className="app-shell">
+  return <div className="app-shell"><a className="skip-link" href="#main-content">Перейти к содержимому</a>
     <header className="topbar">
-      <div className="brand"><img src="/halyk-logo.png" alt="" width={40} height={40} /><div><strong>Career Quest</strong><span>Ваш путь к следующему уровню</span></div></div>
+      <div className="brand"><img src="/halyk-logo.png" alt="" width={40} height={40} /><div><strong>Career Quest</strong><span>Навигатор карьерного развития</span></div></div>
       <div className="top-controls">
-        <div className="role-switch" aria-label="Роль">
-          <button className={role === 'employee' ? 'active' : ''} onClick={() => setRole('employee')}><BriefcaseBusiness size={16} /> Сотрудник</button>
-          <button className={role === 'hr' ? 'active' : ''} onClick={() => setRole('hr')}><Users size={16} /> HR обзор</button>
+        <div className="role-switch" role="group" aria-label="Роль">
+          <button aria-pressed={role === 'employee'} className={role === 'employee' ? 'active' : ''} onClick={() => setRole('employee')}><BriefcaseBusiness size={16} /> Сотрудник</button>
+          <button aria-pressed={role === 'hr'} className={role === 'hr' ? 'active' : ''} onClick={() => setRole('hr')}><Users size={16} /> HR обзор</button>
         </div>
         {role === 'employee' && <div className="picker-wrap">
           <button className="picker-button" aria-expanded={pickerOpen} onClick={() => setPickerOpen(!pickerOpen)}>{selected?.full_name ?? employeeId}<ChevronDown size={16} /></button>
@@ -44,12 +44,12 @@ function App() {
         <select className="lang-select" aria-label="Язык ответа ИИ" title="Язык объяснений ИИ. Интерфейс — на русском." value={language} onChange={event => setLanguage(event.target.value as Language)}><option value="ru">ИИ: RU</option><option value="kk">ИИ: KK</option><option value="en">ИИ: EN</option></select>
       </div>
     </header>
-    <main className="page-wrap">
+    <main id="main-content" className="page-wrap" tabIndex={-1}>
       <Suspense fallback={<div className="loading-panel" role="status"><div className="spinner" /> Загружаем HR-обзор…</div>}>
         {role === 'employee' ? <EmployeePage key={`${employeeId}-${language}-${reloadKey}`} context={context} /> : <HrPage key={language} context={context} onDatasetChange={() => setReloadKey(value => value + 1)} onOpenEmployee={id => { setEmployeeId(id); setRole('employee') }} />}
       </Suspense>
     </main>
-    <footer>Career Quest · Halyk Bank · Данные демонстрационные</footer>
+    <footer>Career Quest · Развитие в вашем темпе. Все данные демонстрационные.</footer>
   </div>
 }
 
