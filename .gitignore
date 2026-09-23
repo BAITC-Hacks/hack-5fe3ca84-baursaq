@@ -1,1 +1,14 @@
 files/
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+.state/
+node_modules/
+frontend/dist/
+*.log
+*.sqlite*
+__MACOSX/
+.DS_Store

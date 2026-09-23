@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      HR_PASSWORD: ${HR_PASSWORD:-hr-demo}
+      EMPLOYEE_PASSWORD: ${EMPLOYEE_PASSWORD:-employee-demo}
+    volumes:
+      - career-quest-state:/app/.state
+volumes:
+  career-quest-state:
