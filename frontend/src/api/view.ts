@@ -1,4 +1,4 @@
-import type { RecommendationResponse as ApiRecommendationResponse } from './types'
+import type { EventParticipation, RecommendationResponse as ApiRecommendationResponse } from './types'
 
 export type Role = 'employee' | 'hr'
 export type Language = 'kk' | 'ru' | 'en'
@@ -87,7 +87,7 @@ export interface CompleteResponse {
 export interface HrOverview {
   lagging_skills?: Array<{ skill_id?: string; name?: string; skill_name?: string; count?: number; employee_count?: number }>
   skill_gaps?: Array<{ skill_id?: string; name?: string; skill_name?: string; count?: number; employee_count?: number }>
-  participation?: Array<{ event_id?: string; title?: string; event_title?: string; completed?: number; no_show?: number; declined?: number; count?: number }>
+  participation?: EventParticipation[]
   no_next_step?: Array<{ employee_id?: string; full_name?: string; reason?: string }>
   without_recommendations?: Array<{ employee_id?: string; full_name?: string; reason?: string }>
   disengaged?: Array<{ employee_id?: string; full_name?: string; reason?: string; count?: number }>
