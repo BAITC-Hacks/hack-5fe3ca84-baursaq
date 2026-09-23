@@ -41,7 +41,7 @@ function App() {
             <div className="picker-list">{directoryLoading ? <p role="status">Ищем сотрудников…</p> : directoryError ? <div role="alert"><p>{directoryError}</p><button onClick={() => { setDirectoryLoading(true); setReloadKey(value => value + 1) }}>Повторить поиск</button></div> : employees.length ? employees.slice(0, 30).map(item => <button key={item.employee_id} onClick={() => { setEmployeeId(item.employee_id); setPickerOpen(false); setSearch('') }}><strong>{item.full_name}</strong><span>{item.employee_id} · {item.role} · {item.grade}</span></button>) : <p>Сотрудники не найдены</p>}</div>
           </div>}
         </div>}
-        <select className="lang-select" aria-label="Язык" value={language} onChange={event => setLanguage(event.target.value as Language)}><option value="ru">RU</option><option value="kk">KK</option><option value="en">EN</option></select>
+        <select className="lang-select" aria-label="Язык ответа ИИ" title="Язык объяснений ИИ. Интерфейс — на русском." value={language} onChange={event => setLanguage(event.target.value as Language)}><option value="ru">ИИ: RU</option><option value="kk">ИИ: KK</option><option value="en">ИИ: EN</option></select>
       </div>
     </header>
     <main className="page-wrap">
