@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
+import { api } from './api/client'
 
 // Placeholder shell — Workstream B replaces this with the Employee / HR screens (see docs/TEAM_PLAN.md).
 function App() {
   const [health, setHealth] = useState<string>('checking backend…')
 
   useEffect(() => {
-    fetch('/api/health')
-      .then((r) => r.json())
-      .then((j) => setHealth(JSON.stringify(j)))
+    api
+      .health()
+      .then((j) => setHealth(JSON.stringify(j, null, 2)))
       .catch(() => setHealth('backend is not reachable on :8000'))
   }, [])
 
